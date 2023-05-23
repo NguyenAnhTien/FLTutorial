@@ -58,6 +58,8 @@ def train(configs):
         project="FLTutorial",
     )
     max_val_acc = -1
+    report_dir = utils.create_report_dir()
+    report_dir = utils.join_path(('logs', report_dir))
     clients, train_dataset, val_dataset = load_data(configs)
     train_data_loader = torch.utils.data.DataLoader(\
                                         dataset=train_dataset,\
@@ -96,6 +98,7 @@ def train(configs):
         })
         if max_val_acc < val_acc:
             file_path = f"{val_acc}_{val_loss}_{train_acc}_{train_loss}.pt"
+            utils.join_path((report_dir, file_path))
             torch.save(global_model, file_path)    
 
 if __name__ == '__main__':
