@@ -10,7 +10,7 @@ def scale_params(
     ) -> dict:
     scaled_params = {}
     for layer in params:
-        scale_params[layer] = {
+        scaled_params[layer] = {
             constants.BIAS   : 0,
             constants.WEIGHT : 0
         }

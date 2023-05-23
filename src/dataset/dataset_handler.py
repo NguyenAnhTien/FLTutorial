@@ -8,7 +8,8 @@ import torch
 from torchvision import transforms
 
 import constants
-from transforms.transforms import ImageNormalizer
+from transforms import ToTensor
+from transforms import ImageNormalizer
 
 class DatasetHandler(torch.utils.data.Dataset):
     def __init__(
@@ -40,4 +41,5 @@ class DatasetHandler(torch.utils.data.Dataset):
         ) -> None:
         self.transforms = transforms.Compose([
             ImageNormalizer(),
+            ToTensor()
         ])

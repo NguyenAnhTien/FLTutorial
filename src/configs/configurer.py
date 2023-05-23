@@ -1,6 +1,6 @@
 """
 @author : Tien Nguyen
-@date   : 2023-04-26
+@date   : 2023-05-22
 """
 
 import utils
@@ -12,7 +12,6 @@ class Configurer(object):
         ) -> None:
         self.setup()
         self.parse(config_file)
-        self.load_hyp()
 
     def setup(
             self
@@ -20,11 +19,6 @@ class Configurer(object):
         root_dir = utils.get_cwd()
         self.root_dir, _ = utils.split_file_path(root_dir)
         self.data_dir = utils.join_path((self.root_dir, constants.DATA))
-        self.train_data_dir = utils.join_path((self.data_dir,\
-                                                            constants.TRAIN))
-        self.test_data_dir = utils.join_path((self.data_dir, constants.TEST))
-        self.preprocess_dir = utils.join_path((self.data_dir,\
-                                                        constants.PREPROCESS))
         self.src      = utils.join_path((self.root_dir, constants.SRC))
         self.configs  = utils.join_path((self.src, constants.YAML_DIR))
 
@@ -39,8 +33,3 @@ class Configurer(object):
                 continue
             for task, behavior in value.items():
                 exec(f"self.{task} = behavior")
-
-    def load_hyp(
-            self
-        ) -> None:
-        self.hyp = utils.read_yaml(utils.join_path((self.configs, self.hyp)))

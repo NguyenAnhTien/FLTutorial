@@ -2,7 +2,10 @@
 @author : Tien Nguyen
 @date   : 2023-05-21
 """
+from tqdm import tqdm
+
 import torch
+import torch.nn.functional as F
 import torchmetrics
 
 import constants
@@ -14,29 +17,31 @@ class Client(object):
             self,
             configs,
             name: str,
-            data_loader
+            images: list,
+            labels: list
         ) -> None:
         self.name = name
         self.configs = configs
-        self.data_loader = data_loader
+        self.setup(images, labels)
         self.define_model()
         self.train_dataloader()
-        self.define_criterion()
         self.configure_optimizers()
 
     def fit(
             self
         ) -> None:
         history = []
-        for _ in range(self.configs.epochs):
+        for _ in tqdm(range(self.configs.epochs)):
             accs = []
             losses = []
             for batch in self.data_loader:
                 images = batch[constants.IMAGE]
                 labels = batch[constants.LABEL]
-                outputs = self.model(images)
-                loss = self.criterion(outputs, labels)
-                acc = self.accuracy(outputs, labels)
+                logits = self.model(images)
+                preds = F.softmax(logits, dim=1)
+                preds = torch.argmax(preds, dim=1)
+                loss = self.model.criterion(logits, labels)
+                acc = self.model.accuracy(preds, labels)
                 loss.backward()
                 self.optimizer.step()
                 self.optimizer.zero_grad()
@@ -76,22 +81,17 @@ class Client(object):
     def configure_optimizers(
             self
         ) -> None:
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=self.configs.lr)
-    
-    def define_criterion(
-            self
-        ) -> None:
-        self.criterion = torch.nn.CrossEntropyLoss()
-
-    def define_metrics(
-            self    
-        ) -> None:
-        self.accuracy = torchmetrics.Accuracy(task="binary",\
-                                        num_classes=self.configs.num_classes)
-
+        self.optimizer = torch.optim.Adam(self.model.parameters(),\
+                                                        lr=self.configs.lr)
 
     def define_model(
             self
         ) -> None:
-        self.model = Model()
+        self.model = Model(self.configs)
 
+    def setup(
+            self,
+            images: list,
+            labels: list
+        ) -> None:
+        self.dataset_handler = DatasetHandler(images=images, labels=labels)

@@ -45,3 +45,8 @@ def clean_dir(data_dir):
     """
     for dir in [constants.ANNOS, constants.IMAGES]:
         os.system(f'rm -rf {data_dir}/{dir}/*')
+
+def mkdir(
+        path: str
+    ) -> None:
+    os.makedirs(path, exist_ok=True)

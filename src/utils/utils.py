@@ -14,7 +14,7 @@ import numpy
 def read_image_data(
         data_file: str
     ) -> list:
-    data_dir = Path("../../data/mnist/")
+    data_dir = Path("../data/mnist/")
     with open(data_dir/data_file, "rb") as file:
         _, size, rows, cols = struct.unpack(">IIII", file.read(16))
         image_data = array("B", file.read())   
@@ -27,7 +27,7 @@ def read_image_data(
 def read_labels(
         label_file: str
     ) -> list:
-    data_dir = Path("../../data/mnist/")
+    data_dir = Path("../data/mnist/")
     with open(data_dir/label_file, "rb") as file:
         magic, _ = struct.unpack(">II", file.read(8))
         if magic != 2049:

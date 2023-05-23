@@ -3,18 +3,24 @@
 @date   : 2023-05-21
 """
 import torch
+import torchmetrics
+import torch.nn.functional as F
 
 import constants
 
 class Model(torch.nn.Module):    
-    def __init__(self):
+    def __init__(self, configs):
         super().__init__()
+        self.configs = configs
+        self.define_metrics()
+        self.define_criterion()
         self.conv1 = torch.nn.Conv2d(1, 20, 7)
         self.conv2 = torch.nn.Conv2d(20, 40, 7)
         self.maxpool = torch.nn.MaxPool2d(2, 2)
         self.flatten = torch.nn.Flatten()
         self.fc = torch.nn.Linear(2560, 10)
         self.relu = torch.nn.functional.relu
+        self.softmax = torch.nn.Softmax(dim=1)
         self.track_layers = {
             'conv1': self.conv1, 
             'conv2': self.conv2, 
@@ -30,7 +36,15 @@ class Model(torch.nn.Module):
         out = self.flatten(out)
         out = self.fc(out)
         return out
-    
+
+    @torch.no_grad()
+    def predict(self, batch):
+        images = batch[constants.IMAGE]
+        logits = self(images)
+        preds = F.softmax(logits, dim=1)
+        preds = torch.argmax(preds, dim=1)
+        return logits, preds
+
     @torch.no_grad()
     def update_params(self, params):
         for layer_name in params:
@@ -56,13 +70,24 @@ class Model(torch.nn.Module):
         accs = []
         losses = []
         for batch in data_loader:
-            images = batch[constants.IMAGE]
             labels = batch[constants.LABEL]
-            outputs = self(images)
-            loss = self.criterion(outputs, labels)
-            acc = self.accuracy(outputs, labels)
+            logits, preds = self.predict(batch)
+            loss = self.criterion(logits, labels)
+            acc = self.accuracy(preds, labels)
             losses.append(loss)
             accs.append(acc)
         avg_loss = torch.stack(losses).mean().item()
         avg_acc = torch.stack(accs).mean().item()
         return (avg_loss, avg_acc)
+
+    def define_criterion(
+            self
+        ) -> None:
+        self.criterion = torch.nn.CrossEntropyLoss()
+
+    def define_metrics(
+            self    
+        ) -> None:
+        self.accuracy = torchmetrics.Accuracy(task="multiclass",\
+                                        num_classes=self.configs.num_classes)
+        
