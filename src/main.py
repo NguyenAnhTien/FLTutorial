@@ -16,6 +16,7 @@ import constants
 from network import Model
 from client import Client
 from configs import Configurer
+from server import start_server
 from dataset import DatasetHandler
 
 def load_data(configs):
@@ -101,16 +102,18 @@ def train(configs):
             utils.join_path((report_dir, file_path))
             torch.save(global_model, file_path)    
 
+def execute_server(args, configs):
+    start_server()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--configs', type=str, default='configs.yaml',\
                                                     help='configuration file')
-    parser.add_argument('--train', type=str, default='True',\
+    parser.add_argument('--command', type=str, default='True',\
                                                         help='train model')
     
     args = parser.parse_args()
     configs = Configurer(args.configs)
 
-    if args.train == 'True':
-        train(configs)
+    eval(args.command)(args, configs)
